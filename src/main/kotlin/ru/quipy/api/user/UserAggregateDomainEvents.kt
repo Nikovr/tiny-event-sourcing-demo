@@ -18,3 +18,5 @@ data class UserCreatedEvent(
     name = CREATED_NEW_USER,
     createdAt = System.currentTimeMillis(),
 )
+
+//s,dsl
