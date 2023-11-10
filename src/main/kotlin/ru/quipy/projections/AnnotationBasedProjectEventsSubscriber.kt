@@ -2,6 +2,8 @@ package ru.quipy.projections
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import ru.quipy.api.ProjectAggregate
 import ru.quipy.api.StatusCreatedEvent
@@ -27,3 +29,4 @@ class AnnotationBasedProjectEventsSubscriber {
         logger.info("Tag created: {}", event.statusName)
     }
 }
+

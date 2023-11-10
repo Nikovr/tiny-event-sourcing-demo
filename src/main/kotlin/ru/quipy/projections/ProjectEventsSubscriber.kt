@@ -3,6 +3,10 @@ package ru.quipy.projections
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.Document
+import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import ru.quipy.api.*
 import ru.quipy.streams.AggregateSubscriptionsManager
@@ -22,6 +26,7 @@ class ProjectEventsSubscriber {
 
             `when`(TaskCreatedEvent::class) { event ->
                 logger.info("Task created: {}", event.title)
+                logger.info("Task created 1: {}", event.title)
             }
 //            `when`(StatusCreatedEvent::class) { event ->
 //                logger.info("Tag created: {}", event.projectId)
@@ -33,3 +38,12 @@ class ProjectEventsSubscriber {
         }
     }
 }
+
+//@Document("transactions-projects-cache")
+//data class Project(
+//        @Id
+//
+//)
+//
+//@Repository
+//interface ProjectCacheRepository: MongoRepository<
