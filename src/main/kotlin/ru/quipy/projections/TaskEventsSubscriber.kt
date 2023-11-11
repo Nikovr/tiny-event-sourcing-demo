@@ -1,0 +1,66 @@
+package ru.quipy.projections
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.Document
+import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.stereotype.Repository
+import org.springframework.stereotype.Service
+import ru.quipy.api.StatusAssignedToTaskEvent
+import ru.quipy.api.TaskAddedExecutorEvent
+import ru.quipy.api.TaskAggregate
+import ru.quipy.api.TaskCreatedEvent
+import ru.quipy.logic.UserEntityTask
+import ru.quipy.streams.AggregateSubscriptionsManager
+import java.util.*
+import javax.annotation.PostConstruct
+import kotlin.collections.ArrayList
+
+@Service
+class TaskEventsSubscriber(
+        private val taskCacheRepository: TaskCacheRepository,
+) {
+    val logger: Logger = LoggerFactory.getLogger(TaskEventsSubscriber::class.java)
+
+    @Autowired
+    lateinit var subscriptionsManager: AggregateSubscriptionsManager
+
+    @PostConstruct
+    fun init() {
+        subscriptionsManager.createSubscriber(TaskAggregate::class, "transactions::tasks-cache") {
+
+            `when`(TaskCreatedEvent::class) { event ->
+                taskCacheRepository.save(Task(event.taskId, event.projectId, null, event.creatorId, event.title, ArrayList<UUID>()))
+                logger.info("Task created: {}", event.title)
+                logger.info("Task created 1: {}", event.taskId)
+            }
+            `when`(TaskAddedExecutorEvent::class) { event ->
+                val taskOptional = taskCacheRepository.findById(event.taskId)
+                val task = taskOptional.get()
+                val executors = task.executors
+                if(!executors.contains(event.executorId)) {
+                    task.executors.add(event.executorId)
+                    taskCacheRepository.save(task)
+                } else {
+                    logger.info("Executor already exist: {}", task.taskId)
+                }
+            }
+        }
+    }
+}
+
+@Document("transactions::tasks-cache")
+data class Task(
+        @Id
+        val taskId: UUID,
+        val projectId: UUID,
+        val statusId: UUID?,
+        val creatorId: String,
+        val title: String,
+        var executors:  ArrayList<UUID>
+        )
+
+@Repository
+interface TaskCacheRepository: MongoRepository<Task, UUID>
