@@ -8,15 +8,11 @@ import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
-import ru.quipy.api.StatusAssignedToTaskEvent
-import ru.quipy.api.TaskAddedExecutorEvent
-import ru.quipy.api.TaskAggregate
-import ru.quipy.api.TaskCreatedEvent
-import ru.quipy.logic.UserEntityTask
+import ru.quipy.api.*
 import ru.quipy.streams.AggregateSubscriptionsManager
 import java.util.*
 import javax.annotation.PostConstruct
-import kotlin.collections.ArrayList
+
 
 @Service
 class TaskEventsSubscriber(
@@ -26,15 +22,15 @@ class TaskEventsSubscriber(
 
     @Autowired
     lateinit var subscriptionsManager: AggregateSubscriptionsManager
-
+    final var str = "deafult"
+    var uuidStart: UUID = UUID.nameUUIDFromBytes(str.toByteArray())
     @PostConstruct
     fun init() {
         subscriptionsManager.createSubscriber(TaskAggregate::class, "transactions::tasks-cache") {
 
             `when`(TaskCreatedEvent::class) { event ->
-                taskCacheRepository.save(Task(event.taskId, event.projectId, null, event.creatorId, event.title, ArrayList<UUID>()))
+                taskCacheRepository.save(Task(event.taskId, event.projectId, uuidStart, event.creatorId, event.title, ArrayList<UUID>()))
                 logger.info("Task created: {}", event.title)
-                logger.info("Task created 1: {}", event.taskId)
             }
             `when`(TaskAddedExecutorEvent::class) { event ->
                 val taskOptional = taskCacheRepository.findById(event.taskId)
@@ -47,19 +43,45 @@ class TaskEventsSubscriber(
                     logger.info("Executor already exist: {}", task.taskId)
                 }
             }
+            `when`(StatusAssignedToTaskEvent::class) { event ->
+                val taskOptional = taskCacheRepository.findById(event.taskId)
+                val task = taskOptional.get()
+                val statusNew = event.statusId
+                task.statusId = statusNew
+                taskCacheRepository.save(task)
+
+            }
+            `when`(TaskTitleChangedEvent::class) { event ->
+                val taskOptional = taskCacheRepository.findById(event.taskId)
+                val task = taskOptional.get()
+                task.title = event.title
+                taskCacheRepository.save(task)
+
+            }
+            `when`(TaskRemovedExecutor::class) { event ->
+                val taskOptional = taskCacheRepository.findById(event.taskId)
+                val task = taskOptional.get()
+                val executors = task.executors
+                if(executors.contains(event.executorId)) {
+                    task.executors.remove(event.executorId)
+                    taskCacheRepository.save(task)
+                } else {
+                    logger.info("Error while deleting executor , executor doen't exist: {}", task.taskId)
+                }
+            }
         }
     }
 }
 
 @Document("transactions::tasks-cache")
 data class Task(
-        @Id
-        val taskId: UUID,
-        val projectId: UUID,
-        val statusId: UUID?,
-        val creatorId: String,
-        val title: String,
-        var executors:  ArrayList<UUID>
+    @Id
+    val taskId: UUID,
+    val projectId: UUID,
+    var statusId: UUID,
+    val creatorId: String,
+    var title: String,
+    var executors:  ArrayList<UUID>
         )
 
 @Repository
