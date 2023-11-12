@@ -39,7 +39,7 @@ class TaskTitleChangedEvent(
     val title: String,
     createdAt: Long = System.currentTimeMillis(),
 ) : Event<TaskAggregate>(
-    name = TASK_CREATED_EVENT,
+    name = TASK_TITLE_CHANGED_EVENT,
     createdAt = createdAt,
 )
 
