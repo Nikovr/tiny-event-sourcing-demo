@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import ru.quipy.api.*
+import ru.quipy.logic.StatusEntity
 import ru.quipy.streams.AggregateSubscriptionsManager
 import java.util.*
 import javax.annotation.PostConstruct
@@ -16,6 +17,8 @@ import javax.annotation.PostConstruct
 @Service
 class ProjectEventsSubscriber (
     private val projectCacheRepository: ProjectCacheRepository,
+    private val taskCacheRepository: TaskCacheRepository,
+    private val userCacheRepository: UserCacheRepository,
 ) {
 
     val logger: Logger = LoggerFactory.getLogger(ProjectEventsSubscriber::class.java)
@@ -28,15 +31,16 @@ class ProjectEventsSubscriber (
         subscriptionsManager.createSubscriber(ProjectAggregate::class, "transactions::projects-cache") {
 
             `when`(ProjectCreatedEvent::class) { event ->
-                projectCacheRepository.save(Project(event.projectId, event.title, event.creatorId, event.createdAt, ArrayList<UUID>(), ArrayList<UUID>()))
+                projectCacheRepository.save(Project(event.projectId, event.title, event.creatorId, event.createdAt, ArrayList<UUID>(), ArrayList<StatusEntity>()))
                 logger.info("Project created: {}", event.title)
             }
             `when`(StatusCreatedEvent::class) { event ->
                 val projectOptional = projectCacheRepository.findById(event.projectId)
                 val project = projectOptional.get()
                 val statuses = project.statuses
-                if(!statuses.contains(event.statusId)) {
-                    project.statuses.add(event.statusId)
+                val curStatus = StatusEntity(event.statusId, event.statusName)
+                if(!statuses.contains(curStatus)) {
+                    project.statuses.add(curStatus)
                     projectCacheRepository.save(project)
                 } else {
                     logger.info("Status already exists: {}", project.projectId)
@@ -46,8 +50,9 @@ class ProjectEventsSubscriber (
                 val projectOptional = projectCacheRepository.findById(event.projectId)
                 val project = projectOptional.get()
                 val members = project.members
+
                 if(!members.contains(event.userId)) {
-                    project.statuses.add(event.userId)
+                    project.members.add(event.userId)
                     projectCacheRepository.save(project)
                 } else {
                     logger.info("Executor already exists: {}", project.projectId)
@@ -65,7 +70,16 @@ data class Project(
         val creatorId: String,
         val createdAt: Long,
         var members: ArrayList<UUID>,
-        var statuses: ArrayList<UUID>,
+        var statuses: ArrayList<StatusEntity>,
+)
+
+data class ProjectInfo(
+        val projectId: UUID,
+        val title: String,
+        val creatorId: String,
+        val createdAt: Long,
+        var members: ArrayList<UserInfo>,
+        var statuses: ArrayList<StatusEntity>,
 )
 
 @Repository

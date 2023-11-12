@@ -17,6 +17,7 @@ import javax.annotation.PostConstruct
 @Service
 class TaskEventsSubscriber(
         private val taskCacheRepository: TaskCacheRepository,
+        private val projectCacheRepository: ProjectCacheRepository,
 ) {
     val logger: Logger = LoggerFactory.getLogger(TaskEventsSubscriber::class.java)
 
@@ -82,6 +83,17 @@ data class Task(
     var title: String,
     var executors:  ArrayList<UUID>
         )
+
+
+data class TaskInfo(
+        @Id
+        val taskId: UUID,
+        val projectId: UUID,
+        var statusId: UUID,
+        val creatorId: String,
+        var title: String,
+        var executors:  ArrayList<UserInfo>
+)
 
 @Repository
 interface TaskCacheRepository: MongoRepository<Task, UUID>

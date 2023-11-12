@@ -44,5 +44,11 @@ data class User(
     val userPassword: String
 )
 
+data class UserInfo(
+        val userId: UUID,
+        val userName: String,
+        val userNickName: String,
+)
+
 @Repository
 interface UserCacheRepository: MongoRepository<User, UUID>
