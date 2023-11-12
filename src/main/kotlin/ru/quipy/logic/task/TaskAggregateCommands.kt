@@ -1,5 +1,6 @@
 package ru.quipy.logic
 
+import ru.quipy.MongoTemplateEventStore.Companion.logger
 import ru.quipy.api.*
 import ru.quipy.api.project.*
 import java.util.*

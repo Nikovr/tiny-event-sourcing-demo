@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import ru.quipy.MongoTemplateEventStore.Companion.logger
 import ru.quipy.api.*
 import ru.quipy.core.EventSourcingService
 import ru.quipy.logic.*
@@ -27,8 +28,8 @@ class TaskController (
         return taskEsService.getState(taskId)
     }
 
-    @PostMapping("/change/{taskId}/{taskTitle}")
-    fun changeTaskTitle(@PathVariable taskId: UUID, @PathVariable taskTitle: String) : TaskTitleChangedEvent {
+    @PostMapping("/change/{taskId}")
+    fun changeTaskTitle(@PathVariable taskId: UUID, @RequestParam taskTitle: String) : TaskTitleChangedEvent {
         return taskEsService.update(taskId) {it.changeTitle(taskId ,taskTitle)}
     }
 

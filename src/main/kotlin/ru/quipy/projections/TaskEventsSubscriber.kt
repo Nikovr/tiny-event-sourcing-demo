@@ -56,7 +56,6 @@ class TaskEventsSubscriber(
                 val task = taskOptional.get()
                 task.title = event.title
                 taskCacheRepository.save(task)
-
             }
             `when`(TaskRemovedExecutor::class) { event ->
                 val taskOptional = taskCacheRepository.findById(event.taskId)
