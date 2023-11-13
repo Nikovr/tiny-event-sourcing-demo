@@ -30,15 +30,16 @@ class TaskController (
 
     @GetMapping("/get/{taskId}")
     fun getTask(@PathVariable taskId: UUID) : TaskInfo {
-        val getTask = taskCacheRepository.findById(taskId)
-        val executors = getTask.get().executors
-        val executorEntityList = ArrayList<UserInfo>()
-        for ( user in executors ) {
-            val curExecutor = userCacheRepository.findById(user).get()
-            val userInfo = UserInfo(curExecutor.userId, curExecutor.userName, curExecutor.userNickName)
-            executorEntityList.add(userInfo)
-        }
-        return TaskInfo(getTask.get().taskId, getTask.get().projectId, getTask.get().statusId, getTask.get().creatorId, getTask.get().title, executorEntityList)
+//        val getTask = taskCacheRepository.findById(taskId)
+//        val executors = getTask.get().executors
+//        val executorEntityList = ArrayList<UserInfo>()
+//        for ( user in executors ) {
+//            val curExecutor = userCacheRepository.findById(user).get()
+//            val userInfo = UserInfo(curExecutor.userId, curExecutor.userName, curExecutor.userNickName)
+//            executorEntityList.add(userInfo)
+//        }
+//        return TaskInfo(getTask.get().taskId, getTask.get().projectId, getTask.get().statusId, getTask.get().creatorId, getTask.get().title, executorEntityList)
+        return getTaskbyId(taskId)
     }
 
     @PostMapping("/change/{taskId}")

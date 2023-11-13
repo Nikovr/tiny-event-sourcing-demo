@@ -33,15 +33,16 @@ class ProjectController(
 
     @GetMapping("/{projectId}")
     fun getProject(@PathVariable projectId: UUID) : ProjectInfo{
-        val getProject = projectCacheRepository.findById(projectId).get()
-        val userList = getProject.members
-        val userEntityList = ArrayList<UserInfo>()
-        for ( user in userList ) {
-            val curMember = userCacheRepository.findById(user).get()
-            val userInfo = UserInfo(curMember.userId, curMember.userName, curMember.userNickName)
-            userEntityList.add(userInfo)
-        }
-        return ProjectInfo(getProject.projectId, getProject.title, getProject.creatorId, getProject.createdAt, userEntityList, getProject.statuses)
+//        val getProject = projectCacheRepository.findById(projectId).get()
+//        val userList = getProject.members
+//        val userEntityList = ArrayList<UserInfo>()
+//        for ( user in userList ) {
+//            val curMember = userCacheRepository.findById(user).get()
+//            val userInfo = UserInfo(curMember.userId, curMember.userName, curMember.userNickName)
+//            userEntityList.add(userInfo)
+//        }
+//        return ProjectInfo(getProject.projectId, getProject.title, getProject.creatorId, getProject.createdAt, userEntityList, getProject.statuses)
+      return  getProjectbyId(projectId)
     }
 
 
@@ -51,7 +52,7 @@ class ProjectController(
     }
 
     @PostMapping("/invite/{projectId}/{userId}")
-    fun inviteUser(@PathVariable projectId: UUID, @PathVariable userId: UUID) : UserInvitedEvent? {
+    fun inviteUser(@PathVariable projectId: UUID, @PathVariable userId: UUID) : UserInvitedEvent {
         return projectEsService.update(projectId) {it.inviteUser(userId)}
     }
 
